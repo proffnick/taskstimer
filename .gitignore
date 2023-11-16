@@ -25,3 +25,7 @@ yarn-error.log*
 #firebase specific
 firebase.js
 .firebaserc
+
+#electron specific
+/dist
+/assets

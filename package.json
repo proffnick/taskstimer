@@ -1,8 +1,10 @@
 {
   "name": "timer",
+  "author": {"name": "Mberev Nicholas", "email": "proffnick[@]yahoo.com", "url": "https://valuepayng.com"},
+  "description": "A simple time scheduling application for looping tasks. desiged for developers",
   "version": "0.1.0",
   "private": true,
-  "main": "main.js",
+  "main": "electron.js",
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
@@ -14,13 +16,36 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "set PORT=3001 && react-scripts start",
-    "build": "react-scripts build",
+    "react-start": "set PORT=3001 && react-scripts start", 
+    "react-build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "electron": "npx electron .",
-    "dev": "concurrently \"npm start\" \"wait-on http://localhost:3000 && npm run electron\""
+    "electron-start": "electron .", 
+    "electron-start-dev": "npx electron .", 
+    "dev": "concurrently \"npm run react-start\" \"wait-on http://localhost:3001 && npm run electron-start\"", 
+    "electron-pack": "electron-builder --dir", 
+    "electron-dist": "electron-builder"
   },
+  "build": {
+    "appId": "com.amtelweb.timerapp",
+    "productName": "TimerApp",
+    "files": [
+      "electron.js",
+      "package.json",
+      "assets/"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "assets/favicon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },  
   "eslintConfig": {
     "extends": [
       "react-app",
@@ -42,7 +67,7 @@
   "devDependencies": {
     "concurrently": "^8.2.2",
     "electron": "^27.1.0",
-    "electron-packager": "^17.1.2",
+    "electron-builder": "^24.6.4",
     "wait-on": "^7.2.0"
   }
 }

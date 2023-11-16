@@ -11,7 +11,7 @@ function createWindow() {
     },
   });
 
-  win.loadURL('http://localhost:3001'); // URL of your local dev server
+  win.loadURL('https://timerapp-ddb0e.web.app/'); // URL of your local dev server
 
   win.setMenuBarVisibility(false);
 }
