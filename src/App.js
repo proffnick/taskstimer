@@ -544,8 +544,8 @@ function App() {
                   </ul>
                 </div>
                 <div className="my-3 btn-group btn-group-sm d-flex align-content-center">
-                      <button onClick={switchTaskTiming} ref={minRef}  className={`btn btn-sm ${useTime == 'm'? 'btn-secondary disabled': 'btn-primary'}`}>{`${useTime === 'm'? 'in minutes': 'switch to minutes'}`}</button>
-                      <button onClick={switchTaskTiming} ref={hRef}  className={`btn btn-sm ${useTime == 'h'? 'btn-secondary disabled': 'btn-primary'}`}>{`${useTime === 'h'? 'in hours': 'switch to hours'}`}</button>
+                      <button onClick={switchTaskTiming} ref={minRef}  className={`btn btn-sm ${useTime == 'm'? 'btn-secondary disabled': 'btn-primary'}`}>{`${useTime === 'm'? 'currently in minutes': 'switch to minutes'}`}</button>
+                      <button onClick={switchTaskTiming} ref={hRef}  className={`btn btn-sm ${useTime == 'h'? 'btn-secondary disabled': 'btn-primary'}`}>{`${useTime === 'h'? 'currenly in hours': 'switch to hours'}`}</button>
                 </div>
 
                 <div className="mt-5 text-center">
