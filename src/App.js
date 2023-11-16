@@ -176,6 +176,7 @@ function App() {
             console.log(tk, "all task before change", nextTask, 140);
             // set the current tasks
             setTasks([...tk]);
+            saveTaskToMemory(tk);
 
             // set the task closk
             const counter = ( (useTime === "h") ? (tk[nextTask].totalTime * (1000 * 60 * 60)) :  (tk[nextTask].totalTime * (1000 * 60)) );
@@ -214,7 +215,13 @@ function App() {
     }
   }, [tasks, track]);
 
-
+  React.useEffect(() => {
+    // check onece of you can find tasks
+    const tsk = getTasksFromMemory();
+    if(tsk){
+      setTasks([...tsk]);
+    }
+  }, []);
 
   React.useEffect(() => {
     setTimerClock(useTime);
@@ -272,6 +279,7 @@ function App() {
 
       tks.splice(index, 1);
       setTasks([...tks]);
+      saveTaskToMemory(tks);
 
     } catch (error) {
       
@@ -310,7 +318,7 @@ function App() {
         }
 
         setTasks([...tsk]);
-
+        saveTaskToMemory(tsk);
        
         button.style.display = "inline-block";
         editButton.style.display = 'none';
@@ -372,6 +380,7 @@ function App() {
 
         setTasks([...tsk]);
         setSounds([...sds]);
+        saveTaskToMemory(tsk);
 
         inputRef.current.value = '';
         taskTimeRef.current.value = '';
@@ -413,9 +422,48 @@ function App() {
       });
 
       setTasks([...tk]);
+      saveTaskToMemory(tk);
 
     } catch (error) {
       console.log(error, 270);
+    }
+  }
+
+  // save all tasks to memory each time tasks are saved
+  // this helps to avoid accidental reloads window reloads
+  const saveTaskToMemory = (tks = []) => {
+    try {
+      if(window && tks.length){
+        window.localStorage.setItem('tasks', JSON.stringify(tks));
+      }
+    } catch (error) {
+      console.log(error, "Error");
+    }
+  }
+
+  const getTasksFromMemory = () => {
+    try {
+      const tasks = window.localStorage.getItem("tasks");
+      if(tasks){
+        return JSON.parse(tasks);
+      }
+      return null;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
+
+  const clearEverything = () => {
+    try {
+      const confirmed = window.confirm("Are you sure ? This process cannot be reversed.");
+
+      if(!confirmed) return;
+      stopAlarm();
+      window.localStorage.removeItem("tasks");
+      window.location.reload();
+    } catch (error) {
+      
     }
   }
 
@@ -499,9 +547,9 @@ function App() {
                       <button onClick={switchTaskTiming} ref={minRef}  className={`btn btn-sm ${useTime == 'm'? 'btn-secondary disabled': 'btn-primary'}`}>{`${useTime === 'm'? 'in minutes': 'switch to minutes'}`}</button>
                       <button onClick={switchTaskTiming} ref={hRef}  className={`btn btn-sm ${useTime == 'h'? 'btn-secondary disabled': 'btn-primary'}`}>{`${useTime === 'h'? 'in hours': 'switch to hours'}`}</button>
                 </div>
-                <div className="d-none">
-                  <button className="btn btn-secondary btn-sm" onClick={playSound}>Test Event</button>
-                  <button className="btn btn-danger btn-sm" onClick={stopSound}>Stop Event</button>
+
+                <div className="mt-5 text-center">
+                  <button onClick={clearEverything} className="btn btn-outline-danger btn-sm px-3 border-0">Clear Everything</button>
                 </div>
               </div>
             </div>
