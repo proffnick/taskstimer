@@ -525,7 +525,7 @@ function App() {
                           return (
                             <li className="list-group-item d-flex justify-content-between align-items-center bg-light px-2" key={index}>
                               <div className="ms-0 me-auto fw-bold">
-                                {task.task}
+                                {task.task}<small className="fw-light text-muted fst-italic">{` - ${ task.totalTime } ${(useTime === 'm')?'minute'+((task.totalTime>1)?'s':''): 'hours'+((task.totalTime>1)?'s':'')}`}</small>
                               </div>
                               <div className="d-inline-block">
                                 <button className={`btn btn-sm border-0 me-1 ${task.isCurrent ? 'btn-primary': (task.processing ? 'btn-warning': (task.done ? 'btn-success': 'btn-secondary')) }`}>
