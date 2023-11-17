@@ -486,6 +486,7 @@ function App() {
       if(!confirmed) return;
       window.localStorage.removeItem("tasks");
       stopAlarm();
+      setTasks([...[]]);
     } catch (error) {
       
     }
