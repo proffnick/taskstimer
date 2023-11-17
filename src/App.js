@@ -1,4 +1,6 @@
 import React from "react";
+import { confirmAlert } from 'react-confirm-alert';
+import 'react-confirm-alert/src/react-confirm-alert.css';
 import valuepay from './media/valuepay.mp3';
 import vwarning from './media/vwarning.mp3';
 import fortress from './media/fortress.mp3';
@@ -264,9 +266,33 @@ function App() {
 
   }, [track]);
 
-  const removeTask = (index) => {
+
+  const confirmAction = async (msg = "") => {
+    return new Promise((resolve, reject) => {
+      try {
+        confirmAlert({
+          title: 'Confirm Action',
+          message: msg,
+          buttons: [
+            {
+              label: 'Yes',
+              onClick: () => resolve(true)
+            },
+            {
+              label: 'No',
+              onClick: () => resolve(false)
+            }
+          ]
+        });
+      } catch (error) {
+        resolve(false);
+      }
+    });
+  }
+
+  const removeTask = async (index) => {
     try {
-      const confirmed = window.confirm(" Please confirm your intended action");
+      const confirmed = await confirmAction(" Please confirm your intended action");
       if(!confirmed) return;
 
       const tks = tasks;
@@ -454,10 +480,9 @@ function App() {
     }
   }
 
-  const clearEverything = () => {
+  const clearEverything = async () => {
     try {
-      const confirmed = window.confirm("Are you sure ? This process cannot be reversed.");
-
+      const confirmed = await confirmAction("Are you sure ? This process cannot be reversed.");
       if(!confirmed) return;
       stopAlarm();
       window.localStorage.removeItem("tasks");
