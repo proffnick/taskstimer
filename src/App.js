@@ -484,8 +484,8 @@ function App() {
     try {
       const confirmed = await confirmAction("Are you sure ? This process cannot be reversed.");
       if(!confirmed) return;
-      stopAlarm();
       window.localStorage.removeItem("tasks");
+      stopAlarm();
     } catch (error) {
       
     }
