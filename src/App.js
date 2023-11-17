@@ -461,7 +461,6 @@ function App() {
       if(!confirmed) return;
       stopAlarm();
       window.localStorage.removeItem("tasks");
-      window.location.reload();
     } catch (error) {
       
     }
@@ -474,15 +473,15 @@ function App() {
             <div className="d-flex align-items-center justify-content-center align-content-center">
               <div>
                 <div className="mb-3">
-                  <p className="fs-2 text-primary fw-bolder text-center">{`${(tasks.find(t => t.isCurrent === true))? (tasks.find(t => t.isCurrent === true))?.task: "All tasks completed" }`}</p>
+                  <p style={{maxWidth: "500px"}} className="fs-3 text-primary fw-bolder text-center px-xl-3"><span className="text-dark">Current: </span>{`${(tasks.find(t => t.isCurrent === true))? (tasks.find(t => t.isCurrent === true))?.task: "No task added yet" }`}</p>
                 </div>
                 <div className="text-center mb-3 fs-1 fw-bolder text-dark">
                   {printTime}
                 </div>
                 <div className="btn-group d-flex align-content-center">
-                  <button ref={startRef} onClick={startTimer} className="btn btn-sm btn-primary px-4">Start</button>
-                  <button ref={pauseRef} onClick={pauseAlarm} className="btn btn-sm btn-warning px-4 disabled">Pause</button>
-                  <button ref={stopRef} onClick={stopAlarm} className="btn btn-sm btn-danger px-4 disabled">Stop</button>
+                  <button ref={startRef} onClick={startTimer} className="btn btn-sm btn-primary px-3">Start</button>
+                  <button ref={pauseRef} onClick={pauseAlarm} className="btn btn-sm btn-warning px-3 disabled">Pause</button>
+                  <button ref={stopRef} onClick={stopAlarm} className="btn btn-sm btn-danger px-3 disabled">Stop</button>
                 </div>
                 <div className="mx-auto my-3" style={{visibility: 'visible'}}>
                   <audio style={{width: "100%"}} ref={soundRef} loop controls/>
@@ -549,7 +548,7 @@ function App() {
                 </div>
 
                 <div className="mt-5 text-center">
-                  <button onClick={clearEverything} className="btn btn-outline-danger btn-sm px-3 border-0">Clear Everything</button>
+                  <button onClick={clearEverything} className="btn btn-outline-danger btn-sm px-3 border-0">Clear</button>
                 </div>
               </div>
             </div>

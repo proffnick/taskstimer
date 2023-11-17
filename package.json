@@ -1,14 +1,20 @@
 {
   "name": "timer",
-  "author": {"name": "Mberev Nicholas", "email": "proffnick[@]yahoo.com", "url": "https://valuepayng.com"},
+  "author": {
+    "name": "Mberev Nicholas",
+    "email": "proffnick[@]yahoo.com",
+    "url": "https://valuepayng.com"
+  },
   "description": "A simple time scheduling application for looping tasks. desiged for developers",
   "version": "0.1.0",
   "private": true,
-  "main": "electron.js",
+  "main": "public/main.js",
+  "homepage": "./",
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "electron-is-dev": "^2.0.0",
     "firebase": "^10.6.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -16,23 +22,30 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "react-start": "set PORT=3001 && react-scripts start", 
+    "react-start": "set PORT=3001 && react-scripts start",
     "react-build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "electron-start": "electron .", 
-    "electron-start-dev": "npx electron .", 
-    "dev": "concurrently \"npm run react-start\" \"wait-on http://localhost:3001 && npm run electron-start\"", 
-    "electron-pack": "electron-builder --dir", 
+    "electron-start": "electron .",
+    "electron-start-dev": "npx electron .",
+    "dev": "concurrently \"npm run react-start\" \"wait-on http://localhost:3001 && npm run electron-start\"",
+    "electron-pack": "electron-builder --dir build --em.main=build/electron.js",
     "electron-dist": "electron-builder"
   },
   "build": {
     "appId": "com.amtelweb.timerapp",
     "productName": "TimerApp",
+    "directories": {
+      "output": "dist/",
+      "buildResources": "assets"
+    },
     "files": [
-      "electron.js",
+      "public/main.js",
+      "public/electron.js",
       "package.json",
-      "assets/"
+      "assets/**/*",
+      "public/**/*",
+      "build/**/*"
     ],
     "win": {
       "target": [
@@ -45,7 +58,7 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
     }
-  },  
+  },
   "eslintConfig": {
     "extends": [
       "react-app",
