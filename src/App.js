@@ -488,7 +488,7 @@ function App() {
       stopAlarm();
       setTasks([...[]]);
     } catch (error) {
-      
+      console.log(error, " error in clearing board");
     }
   }
 
