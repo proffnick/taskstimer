@@ -12,17 +12,14 @@ function App() {
   const startRef  = React.useRef();
   const stopRef   = React.useRef();
   const pauseRef  = React.useRef();
-  const ttInputRef = React.useRef();
 
   // others
-  const inputRef      = React.useRef();
-  const submit        = React.useRef();
-  const submitEdit    = React.useRef();
-  const taskTimeRef   = React.useRef();
-  const isPlaying     = React.useRef(false);
-  const thisSound     = React.useRef();
-  const allTasksRef   = React.useRef(null);
-  const allSoundsRef  = React.useRef(null);
+  const inputRef  = React.useRef();
+  const minRef    = React.useRef();
+  const hRef      = React.useRef();
+  const submit    = React.useRef();
+  const submitEdit = React.useRef();
+  const taskTimeRef = React.useRef();
 
   const [worker, setWorker] = React.useState(null);
 
@@ -31,34 +28,44 @@ function App() {
     {task: "Fortress", warn: fwarning, notify: fortress}
   ]);
 
+  const [useTime, setUseTime] = React.useState("m"); // h m for minutes
 
-  const playSound = (type = "notify", counter = 0) => {
+
+  const playSound = (type = "notify") => {
+      
+    let totalCount = 20000;
+    let tracker    = 0; // variable that keeps count of passing time
+    let interval   = null;
 
     try {
 
-      const runSound = () => {
+      setTimeout(() => {
         const event = new Event('load', { 'bubbles': true });
-        const currentTask = allTasksRef.current.find(task => task.isCurrent === true);
-        const taskSound = allSoundsRef.current.find(task => task.task === currentTask.task);
+        const currentTask = tasks.find(task => task.isCurrent === true);
+        const taskSound = sounds.find(task => task.task === currentTask.task);
         soundRef.current.src = type === "notify" ? taskSound.notify: taskSound.warn;
         soundRef.current.onload = function (){
           this.play();
-          thisSound.current = this;
+          // begin count down
+          interval = setInterval(() => {
+            tracker += 1000;
+  
+            if(tracker === totalCount){
+              clearInterval(interval);
+              this.pause();
+            }
+  
+          }, 1000);
+
+          // end count down
 
         };
         soundRef.current.dispatchEvent(event);
 
-      }
+      }, 100);
 
-      if(isPlaying.current === false){
-        runSound(type);
-        isPlaying.current = true;
-        return;
-      }
+     
 
-      if(isPlaying.current === true && counter){
-        stopSound(thisSound.current, counter);
-      }
 
     } catch (error) {
       // console.log("could not play");
@@ -66,38 +73,19 @@ function App() {
 
 
   }
-
-  const stopSound = ($this, counter) => {
-    try {
-      let totalCount = 20000;
-      let multiply  = (counter * 1000);
-      if(multiply === totalCount){
-        $this.pause();
-        worker.postMessage({stopSound: true});
-        isPlaying.current = false;
-      }
-    } catch (error) {
- 
-    }
-  }
+  
 
   const [tasks, setTasks] = React.useState([
     
   ]);
 
-  // React.useEffect(() => {}, [tasks]);
-
-
   const [track, setTrack]   = React.useState(0);
   const currentTaskClock    = React.useRef(0);
   const [timer, setTimer]   = React.useState(null);
-  const isRunning           = React.useRef(false);
 
 
   const stopAlarm = () => {
     try {
-      worker.postMessage({stop: true});
-      isRunning.current = false;
       soundRef.current.pause();
       startRef.current.classList.remove('disabled');
       startRef.current.innerText = "Start";
@@ -115,7 +103,6 @@ function App() {
   const pauseAlarm = () => {
     try {
       worker.postMessage({stop: true});
-      isRunning.current = false;
       soundRef.current.pause();
       clearInterval(timer);
       startRef.current.classList.remove('disabled');
@@ -141,29 +128,41 @@ function App() {
   const startTimer = () => {
       try {
         // current timer in seconds
-        // console.log(tasks, " current tasks");
+
+        if(currentTaskClock.current === 0){ 
+          setTimeout(() => {
+            startTimer();
+          },  100);
+          return;
+        }
+
 
         const runTask = () => {
+
           // console.log(currentTaskClock, track, 121);
+
           // get current task 
-          let currentTask = allTasksRef.current.find(task => task.isCurrent === true);
+          let currentTask = tasks.find(task => task.isCurrent === true);
           //if time remaining is equal play warning sound
           if(currentTaskClock.current === currentTask.warnAt){
-            // playSound('warn'); // working
-            worker.postMessage({startSound: true, type: 'warn'});
+            playSound('warn'); // working
           }
 
           // but if the index of current task is not greater than total indexes do something
 
-          const isFinished = ((allTasksRef.current.indexOf(currentTask) + 1) > (allTasksRef.current.length - 1)); 
-
+          const isFinished = ((tasks.indexOf(currentTask) + 1) > (tasks.length - 1)); 
 
           if(currentTaskClock.current === 1000){
+            // console.log(135, " is 1k now");
+          }
+
+          if(currentTaskClock.current === 1000){
+            // play sound here
             // console.log(131, "it got to zero, we are playing it out now");
-            // playSound(); // for next task
-            worker.postMessage({startSound: true, type: 'notify'});
+            playSound(); // for next task
+
             // switch task
-            const tk = allTasksRef.current;
+            const tk = tasks;
             const nextTask = isFinished ? 0: (tk.indexOf(currentTask) + 1); 
             tk[tk.indexOf(currentTask)].isCurrent = false;
             tk[tk.indexOf(currentTask)].done = true;
@@ -171,13 +170,14 @@ function App() {
             tk[nextTask].isCurrent = true;
             tk[nextTask].done = false;
             tk[nextTask].processing = true;
+            
+            // console.log(tk, "all task before change", nextTask, 140);
             // set the current tasks
-            allTasksRef.current = tk;
             setTasks([...tk]);
             saveTaskToMemory(tk);
 
             // set the task closk
-            const counter = ( (tk[nextTask].timeIn === "h") ? (tk[nextTask].totalTime * (1000 * 60 * 60)) :  (tk[nextTask].totalTime * (1000 * 60)) );
+            const counter = ( (useTime === "h") ? (tk[nextTask].totalTime * (1000 * 60 * 60)) :  (tk[nextTask].totalTime * (1000 * 60)) );
 
             setTrack(counter);
             // 
@@ -191,9 +191,10 @@ function App() {
 
         }
 
-        runTask();
+        setTimer(setInterval(runTask, 1000));
         // console.log(149);
         // trigger Start
+        triggerStart();
 
       } catch (error) {
         // console.log(error, 154);
@@ -201,35 +202,21 @@ function App() {
   }
 
 
-  const processStart = () => {
-      try {
-        isRunning.current = true;
-        worker.postMessage({start: true});
-        triggerStart();
-      } catch (error) {
-        
-      }
-  }
-
   // whenever track becomes zero, regardless of where, this callback runs
   // this process defeats the fact that we want to run a process differently when in process via startTimer method
 
-  const setTimerClock = React.useCallback(() => {
+  const setTimerClock = React.useCallback((tm) => {
     const currentEvent = tasks.find(task => task.isCurrent === true);
     if(track === 0 && currentEvent){
-      const counter = ( (currentEvent.timeIn === "h") ?  (currentEvent.totalTime * (1000 * 60 * 60)) : (currentEvent.totalTime * (1000 * 60 )) ); // in miliseconds hour * seconds * minuts = milisecons
+      const counter = ( (tm === "h") ?  (currentEvent.totalTime * (1000 * 60 * 60)) : (currentEvent.totalTime * (1000 * 60 )) ); // in miliseconds hour * seconds * minuts = milisecons
       setTrack(counter);
     }
   }, [tasks, track]);
-
-
 
   React.useEffect(() => {
     // check onece of you can find tasks
     const tsk = getTasksFromMemory();
     if(tsk){
-      allTasksRef.current = tsk[0];
-      allSoundsRef.current = tsk[1];
       setTasks([...tsk[0]]);
       setSounds([...tsk[1]]);
     }
@@ -237,25 +224,23 @@ function App() {
     if(!worker) return setWorker(new Worker(`${process.env.PUBLIC_URL}/timerWorker.js`));
 
     worker.onmessage = (event) => {
-      // console.log(event?.data, event, " worker event");
-      if((event?.data?.count) >= 0 && ((event?.data?.isPlay) === false)){
-        startTimer();
-      }
-
-      if((event?.data?.play) === true && ((event?.data?.isPlay) === true)){
-        // startTimer();
-        // playSound
-        playSound(event?.data?.type, event?.data?.counter);
-      }
-
+      console.log(event?.data, event, " worker event");
     };
+
+    worker.onerror = (error) => {
+      console.log(error, " Service worker error");
+    }
+
+    console.log(worker, " Logged worker");
+
+    worker.postMessage({start: true});
 
     return () => worker.terminate();
 
   }, [worker]);
 
   React.useEffect(() => {
-    setTimerClock();
+    setTimerClock(useTime);
   }, [setTimerClock]);
 
   React.useEffect(() => {
@@ -264,6 +249,7 @@ function App() {
 
 
   const printTime = React.useMemo(() => {
+
     // convert to minutes
     // convert to seconds
     // convert to hours
@@ -332,7 +318,6 @@ function App() {
       }
 
       tks.splice(index, 1);
-      allTasksRef.current = tks;
       setTasks([...tks]);
       saveTaskToMemory(tks);
 
@@ -348,7 +333,6 @@ function App() {
       const editButton = submitEdit.current;
       const time    = taskTimeRef.current;
       const text    = inputRef.current;
-      const tin     = ttInputRef.current.value.trim();
 
       button.style.display = 'none';
       editButton.style.display = "inline-block";
@@ -362,27 +346,24 @@ function App() {
         
         const value     = (inputRef.current.value.trim());
         const duration  = parseInt(taskTimeRef.current.value.trim());
-        //if(duration === 0 || duration > 24) return;
+        if(duration === 0 || duration > 24) return;
         if(!value || value.length < 2) return;
 
         const tsk = tasks;
 
         tsk[index] = {
           ...task,
-          timeIn: tin,
           task: value,
           totalTime: duration
         }
 
         setTasks([...tsk]);
-        allTasksRef.current = tsk;
         saveTaskToMemory(tsk);
        
         button.style.display = "inline-block";
         editButton.style.display = 'none';
         time.value        = "";
         text.value        = "";
-        ttInputRef.current.value = "";
         
       }
 
@@ -397,17 +378,13 @@ function App() {
       try {
         const t = inputRef.current.value.trim();
         const tt = taskTimeRef.current.value.trim();
-        const tin = ttInputRef.current.value.trim();
 
         if(t.length > 50) return;
         if(t.length < 2) return;
-        if(!tin.length) return;
         if(!tt) return;
+        if(parseInt(tt) > 24 && useTime === 'h') return;
 
         const tsk = tasks;
-
-        console.log(tsk, " previous tasks before manipulation");
-
         const found = tsk.find(tk => tk.task === t);
         if(found) return alert("Duplicate task attempt!");
         const first = tsk.find(ttk => ttk.isCurrent === true);
@@ -417,9 +394,7 @@ function App() {
           task: t,
           done: false,
           processing: false,
-          timeIn: tin,
-          totalTime: Math.abs(parseInt(tt)),
-          warnAt: (tin === "h") ? 300000 : 30000
+          totalTime: Math.abs(parseInt(tt))
         } : {
           isCurrent: (tsk.length > 0) ? false: true,
           totalTime: Math.abs(parseInt(tt)), // hours or minutes
@@ -427,9 +402,8 @@ function App() {
           sound: "valuepay",
           warning: "vwarning",
           processing: false,
-          timeIn: tin,
           done: false,
-          warnAt: (tin === "h") ? 300000 : 30000 // 5 minites
+          warnAt: (useTime === "h") ? 300000 : 30000 // 5 minites
         };
 
         const newS = {
@@ -443,19 +417,56 @@ function App() {
         sds.push(newS);
 
         tsk[((tsk.length - 1) + 1)] = New;
-        allTasksRef.current = tsk;
-        allSoundsRef.current = sds;
+
         setTasks([...tsk]);
         setSounds([...sds]);
         saveTaskToMemory(tsk);
 
         inputRef.current.value = '';
         taskTimeRef.current.value = '';
-        ttInputRef.current.value = '';
 
       } catch (error) {
         
       }
+  }
+
+  const switchTaskTiming = () => {
+    try {
+      // switch timing
+      const tm = (useTime === "m")? "h": "m";
+      setUseTime(tm);
+      // stop all tasks
+      setTimeout(() => {
+        updateAllTasksTiming(tm);
+        setTimeout(() => {
+          stopAlarm();
+          setTimeout(() => {
+            setTimerClock(tm);
+          }, 100);
+        }, 100);
+      }, 100);
+      
+      
+      
+    } catch (error) {
+      
+    }
+  }
+
+  // update all tasks timing
+  const updateAllTasksTiming = (t) => {
+    try {
+      const tk = tasks;
+      tk.forEach((T, index) => {
+          tk[index].warnAt = (t === "h") ? 300000 : 30000;
+      });
+
+      setTasks([...tk]);
+      saveTaskToMemory(tk);
+
+    } catch (error) {
+      // console.log(error, 270);
+    }
   }
 
   // save all tasks to memory each time tasks are saved
@@ -487,14 +498,12 @@ function App() {
 
   const clearEverything = async () => {
     worker.postMessage({stop: true});
-    isRunning.current = false;
     try {
       const confirmed = await confirmAction("Are you sure ? This process cannot be reversed.");
       if(!confirmed) return;
       window.localStorage.removeItem("tasks");
       stopAlarm();
       setTasks([...[]]);
-      allTasksRef.current = null;
     } catch (error) {
       // console.log(error, " error in clearing board");
     }
@@ -536,9 +545,9 @@ function App() {
       pauseAlarm();
       
       // update task
-      const counter = ( ($this.timeIn === "h") ?  ($this.totalTime * (1000 * 60 * 60)) : ($this.totalTime * (1000 * 60 )) ); // in miliseconds hour * seconds * minuts = milisecons
+      const counter = ( (useTime === "h") ?  ($this.totalTime * (1000 * 60 * 60)) : ($this.totalTime * (1000 * 60 )) ); // in miliseconds hour * seconds * minuts = milisecons
       setTrack(counter);
-      allTasksRef.current = tks;
+
       setTasks([...tks]);
       saveTaskToMemory(tks);
 
@@ -560,7 +569,7 @@ function App() {
                   {printTime}
                 </div>
                 <div className="btn-group d-flex align-content-center">
-                  <button ref={startRef} onClick={processStart} className="btn btn-sm btn-primary px-3">Start</button>
+                  <button ref={startRef} onClick={startTimer} className="btn btn-sm btn-primary px-3">Start</button>
                   <button ref={pauseRef} onClick={pauseAlarm} className="btn btn-sm btn-warning px-3 disabled">Pause</button>
                   <button ref={stopRef} onClick={stopAlarm} className="btn btn-sm btn-danger px-3 disabled">Stop</button>
                 </div>
@@ -574,14 +583,8 @@ function App() {
                       type="number" 
                       className="form-control" 
                       placeholder="Task time" 
-                      aria-label="time"
-                      style={{maxWidth: 90}} 
+                      aria-label="time" 
                     />
-                    <select style={{maxWidth: 90}} ref={ttInputRef} className="form-control">
-                        <option value={''}>-Time in-</option>
-                        <option value={'h'}>hour(s)</option>
-                        <option value={'m'}>minutes</option>
-                    </select>
                     <input
                       ref={inputRef} 
                       type="text" 
@@ -611,7 +614,7 @@ function App() {
                           return (
                             <li className="list-group-item d-flex justify-content-between align-items-center bg-light px-2" key={index}>
                               <div className="ms-0 me-auto fw-bold">
-                                {task.task}<small className="fw-light text-muted fst-italic">{` - ${ task.totalTime } ${(task?.timeIn === 'm')?'minute'+((task.totalTime>1)?'s':''): 'hour'+((task.totalTime>1)?'s':'')}`}</small>
+                                {task.task}<small className="fw-light text-muted fst-italic">{` - ${ task.totalTime } ${(useTime === 'm')?'minute'+((task.totalTime>1)?'s':''): 'hour'+((task.totalTime>1)?'s':'')}`}</small>
                               </div>
                               <div className="d-inline-block">
                                 <button onClick={() => switchTo(task, index)} className={`btn btn-sm border-0 me-1 ${task.isCurrent ? 'btn-primary': (task.processing ? 'btn-warning': (task.done ? 'btn-success': 'btn-secondary')) }`}>
@@ -628,6 +631,10 @@ function App() {
                           );
                       })}
                   </ul>
+                </div>
+                <div className="my-3 btn-group btn-group-sm d-flex align-content-center">
+                      <button onClick={switchTaskTiming} ref={minRef}  className={`btn btn-sm ${useTime === 'm'? 'btn-secondary disabled': 'btn-primary'}`}>{`${useTime === 'm'? 'currently in minutes': 'switch to minutes'}`}</button>
+                      <button onClick={switchTaskTiming} ref={hRef}  className={`btn btn-sm ${useTime === 'h'? 'btn-secondary disabled': 'btn-primary'}`}>{`${useTime === 'h'? 'currenly in hours': 'switch to hours'}`}</button>
                 </div>
 
                 <div className="mt-5 text-center">

@@ -6,6 +6,9 @@ const BrowserWindow = electron.BrowserWindow;
 const path = require('path');
 const isDev = require('electron-is-dev');
 
+const { powerSaveBlocker } = electron;
+const id = powerSaveBlocker.start('prevent-app-suspension');
+
 let mainWindow;
 
 async function checkOnlineStatus() {
@@ -26,9 +29,11 @@ function createWindow() {
   mainWindow.loadURL(isDev ? 'http://localhost:3001' : `https://timerapp-ddb0e.web.app/`).catch(() => {
     mainWindow.loadFile('public/offline.html');
   });
-  mainWindow.on('closed', () => mainWindow = null);
-  mainWindow.setMenuBarVisibility(false);
+  mainWindow.on('closed', () => {mainWindow = null; powerSaveBlocker.stop(id);});
+  mainWindow.setMenuBarVisibility(true);
+  
   mainWindow.on('close', () => {
+    powerSaveBlocker.stop(id);
     mainWindow.focus();
   });
 }
@@ -36,6 +41,7 @@ function createWindow() {
 ipcMain.on('reload-app', () => {
   checkOnlineStatus().then(online => {
     if (online) {
+      powerSaveBlocker.start(id);
       mainWindow.loadURL(isDev ? 'http://localhost:3001' : `https://timerapp-ddb0e.web.app/`).catch(() => {
         mainWindow.loadFile('public/offline.html');
       });
@@ -48,6 +54,7 @@ ipcMain.on('reload-app', () => {
 app.on('ready', createWindow);
 
 app.on('window-all-closed', () => {
+  powerSaveBlocker.stop(id);
   if (process.platform !== 'darwin') {
     app.quit();
   }
